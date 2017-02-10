@@ -48,12 +48,23 @@ class ElasticsearchEngine extends Engine
                     '_type' => $model->searchableAs(),
                 ]
             ];
+
+            if (method_exists($model, 'searchableParent')) {
+                end($params['body']);
+                $params['body'][key($params['body'])]['update']['_parent'] = $model->searchableParent()->id;
+            }
+
+            if (method_exists($model, 'searchableRouting')) {
+                end($params['body']);
+                $params['body'][key($params['body'])]['update']['_routing'] = $model->searchableRouting()->id;
+            }
+
             $params['body'][] = [
                 'doc' => $model->toSearchableArray(),
                 'doc_as_upsert' => true
             ];
         });
-
+        
         $this->elastic->bulk($params);
     }
 
